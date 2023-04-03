@@ -635,6 +635,28 @@ int BroadcomNode::command(int argc, const char* const* argv) {
 			printf("Q2Max: Port %u Egress : Total %u\n", stat_max_q2_port, stat_max_q2_total);
 			return (TCL_OK);
         }
+    } else if (argc == 3) {
+        if (strcmp(argv[1], "get-max-queue-buildup") == 0) {
+            Tcl& tcl = Tcl::instance();
+            int target_q_idx = atoi(argv[2]);
+
+            if (target_q_idx < 0 ||  target_q_idx > qCnt) {
+                fprintf(stderr, "Invalid queue selection %d\n", target_q_idx);
+                return (TCL_ERROR);
+            }
+
+            uint32_t max_val2[qCnt] = {0, };
+            for (unsigned i = 0; i < pCntMax; i++) {
+                for (unsigned q = 0; q < qCnt; q++) {
+                    if (stat_max_totalEgressBytes[i][q] > max_val2[q]) {
+                        max_val2[q] = stat_max_totalEgressBytes[i][q];
+                    }
+                }
+            }
+            
+            tcl.resultf("%u", max_val2[target_q_idx]);
+			return (TCL_OK);
+        }
     }
     return TclObject::command(argc, argv);
 }
